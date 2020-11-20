@@ -10,13 +10,20 @@ client.on('ready', () => {
 });
 const ws = new WebSocket(process.env.GATEWAY);
 
+let isProcessing = false;
+
 ws.on('open', function open() {
     console.log("Connection established!");
 });
 
 client.on('message', message => {
     if (message.content.startsWith('!db ')) {
+        if (isProcessing) {
+            message.reply("Nah I am already processing something, wait man.");
+            return;
+        }
         if (message.content.startsWith('!db crawl ')) {
+            isProcessing = true;
             let matches = [];
             let string = "";
             let chunks = [];
@@ -32,6 +39,17 @@ client.on('message', message => {
                         matches.push(data.parameters);
                     }
                     if (data.message == "finished") {
+                        isProcessing = false;
+
+                        if (matches.length == 0) {
+
+                            if (Math.random() > 0.99) {
+                                message.reply("I have found 0 matches!", { files: ["https://media1.tenor.com/images/b11044c627cef3e97d4d09680e3f2ec0/tenor.gif"] });
+                            }else{
+                                message.reply("I have found 0 matches!");
+                            }
+                            return;
+                        }
                         msg.edit(msg.content + "\n\nFinished crawling the service! I have found " + matches.length + " matches. I will list them below:\n\n\n").then((msgedit) => {
                             matches.forEach((match) => {
 
